@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { io, Socket } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
-import { getAccessToken } from '@/lib/api'
 
 interface SocketContextType {
   socket: Socket | null
@@ -26,11 +25,16 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-  const [socket, setSocket] = useState<Socket | null>(null)
-  const [isConnected, setIsConnected] = useState(false)
+  // Using null as default since Socket.IO is disabled
+  const [socket] = useState<Socket | null>(null)
+  const [isConnected] = useState(false)
   const { isAuthenticated, user } = useAuth()
 
+  // Socket connection is disabled to prevent connection errors
   useEffect(() => {
+    // Socket connection is intentionally disabled
+    // Uncomment the code below when your backend Socket.IO server is ready
+    /*
     if (isAuthenticated && user) {
       const token = getAccessToken()
       
@@ -40,7 +44,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           auth: {
             token,
           },
-          transports: ['websocket'],
+          transports: ['websocket', 'polling'],
+          reconnectionAttempts: 3,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          timeout: 10000
         })
 
         // Connection event handlers
@@ -77,6 +85,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         setIsConnected(false)
       }
     }
+    */
   }, [isAuthenticated, user])
 
   const emit = (event: string, data?: any) => {
