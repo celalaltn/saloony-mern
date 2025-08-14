@@ -2,19 +2,40 @@ const sgMail = require('@sendgrid/mail');
 const twilio = require('twilio');
 const NotificationLog = require('../models/NotificationLog');
 
-// Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Initialize SendGrid (optional)
+let sendGridEnabled = false;
+if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  sendGridEnabled = true;
+  console.log('✅ SendGrid initialized');
+} else {
+  console.log('⚠️ SendGrid not configured - email notifications disabled');
+}
 
-// Initialize Twilio
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Initialize Twilio (optional)
+let twilioClient = null;
+let twilioEnabled = false;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && 
+    process.env.TWILIO_ACCOUNT_SID.startsWith('AC')) {
+  twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+  twilioEnabled = true;
+  console.log('✅ Twilio initialized');
+} else {
+  console.log('⚠️ Twilio not configured - SMS notifications disabled');
+}
 
 class NotificationService {
   // Send email notification
   async sendEmail(options) {
     try {
+      if (!sendGridEnabled) {
+        console.log('📧 Email notification skipped - SendGrid not configured');
+        return { success: false, message: 'SendGrid not configured' };
+      }
+
       const {
         to,
         subject,
@@ -29,8 +50,8 @@ class NotificationService {
       const msg = {
         to,
         from: {
-          email: process.env.FROM_EMAIL,
-          name: process.env.FROM_NAME || 'Saloony'
+          email: process.env.SENDGRID_FROM_EMAIL,
+          name: process.env.SENDGRID_FROM_NAME || 'Saloony'
         },
         subject,
         html: content,
@@ -87,6 +108,11 @@ class NotificationService {
   // Send SMS notification
   async sendSMS(options) {
     try {
+      if (!twilioEnabled) {
+        console.log('📱 SMS notification skipped - Twilio not configured');
+        return { success: false, message: 'Twilio not configured' };
+      }
+
       const {
         to,
         content,

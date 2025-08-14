@@ -17,10 +17,9 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
 const schema = yup.object({
-  email: yup
+  identifier: yup
     .string()
-    .email('Geçerli bir e-posta adresi girin')
-    .required('E-posta adresi gerekli'),
+    .required('E-posta adresi veya telefon numarası gerekli'),
   password: yup
     .string()
     .min(6, 'Şifre en az 6 karakter olmalı')
@@ -48,7 +47,10 @@ const LoginPage: React.FC = () => {
     try {
       setIsLoading(true)
       setError('')
-      await login(data)
+      await login({
+        identifier: data.identifier,
+        password: data.password
+      })
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Giriş yapılırken bir hata oluştu')
@@ -70,12 +72,12 @@ const LoginPage: React.FC = () => {
       )}
 
       <TextField
-        {...register('email')}
+        {...register('identifier')}
         fullWidth
-        label="E-posta Adresi"
-        type="email"
-        error={!!errors.email}
-        helperText={errors.email?.message}
+        label="E-posta Adresi veya Telefon"
+        type="text"
+        error={!!errors.identifier}
+        helperText={errors.identifier?.message}
         margin="normal"
         InputProps={{
           startAdornment: (

@@ -9,13 +9,9 @@ const Company = require('../models/Company');
 const router = express.Router();
 
 // @route   POST /api/v1/auth/register
-// @desc    Register a new company and admin user
+// @desc    Register a new user (simplified)
 // @access  Public
 router.post('/register', [
-  body('companyName').trim().isLength({ min: 2, max: 100 }).withMessage('Company name must be between 2 and 100 characters'),
-  body('businessType').isIn(['salon', 'barbershop', 'spa', 'clinic']).withMessage('Invalid business type'),
-  body('firstName').trim().isLength({ min: 2, max: 50 }).withMessage('First name must be between 2 and 50 characters'),
-  body('lastName').trim().isLength({ min: 2, max: 50 }).withMessage('Last name must be between 2 and 50 characters'),
   body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('phone').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
@@ -30,7 +26,7 @@ router.post('/register', [
       });
     }
 
-    const { companyName, businessType, firstName, lastName, email, password, phone, address } = req.body;
+    const { email, password, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -41,31 +37,21 @@ router.post('/register', [
       });
     }
 
-    // Check if company email already exists
-    const existingCompany = await Company.findOne({ email });
-    if (existingCompany) {
-      return res.status(400).json({
-        success: false,
-        message: 'Company with this email already exists',
-      });
-    }
-
-    // Create company
+    // Create default company for the user
     const company = new Company({
-      name: companyName,
+      name: `${email.split('@')[0]}'s Business`, // Default company name from email
       email,
       phone,
-      businessType,
-      address,
+      businessType: 'salon', // Default business type
     });
 
     await company.save();
 
-    // Create admin user
+    // Create admin user with minimal required fields
     const user = new User({
       company: company._id,
-      firstName,
-      lastName,
+      firstName: email.split('@')[0], // Use email prefix as first name
+      lastName: 'User', // Default last name
       email,
       password,
       phone,
@@ -92,7 +78,7 @@ router.post('/register', [
 
     res.status(201).json({
       success: true,
-      message: 'Company and admin user created successfully',
+      message: 'User registered successfully',
       data: {
         user: {
           id: user._id,
@@ -110,20 +96,22 @@ router.post('/register', [
         tokens,
       },
     });
-  } catch (error) {
+  }  catch (error) {
     console.error('Registration error:', error);
+    console.error('Registration error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Server error during registration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
 
 // @route   POST /api/v1/auth/login
-// @desc    Login user
+// @desc    Login user with email or phone
 // @access  Public
 router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
+  body('identifier').notEmpty().withMessage('Email or phone number is required'),
   body('password').notEmpty().withMessage('Password is required'),
 ], async (req, res) => {
   try {
@@ -136,10 +124,13 @@ router.post('/login', [
       });
     }
 
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    // Find user with password
-    const user = await User.findOne({ email })
+    // Find user with password - check if identifier is email or phone
+    const isEmail = identifier.includes('@');
+    const query = isEmail ? { email: identifier } : { phone: identifier };
+    
+    const user = await User.findOne(query)
       .select('+password')
       .populate('company');
 
@@ -212,11 +203,13 @@ router.post('/login', [
         tokens,
       },
     });
-  } catch (error) {
+  }catch (error) {
     console.error('Login error:', error);
+    console.error('Login error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Server error during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

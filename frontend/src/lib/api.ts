@@ -94,7 +94,7 @@ export interface ApiResponse<T = any> {
 export interface PaginatedResponse<T> {
   success: boolean
   data: {
-    [key: string]: T[]
+    items: T[]
     pagination: {
       current: number
       pages: number
@@ -118,24 +118,19 @@ export const apiClient = {
   patch: <T = any>(url: string, data?: any): Promise<ApiResponse<T>> =>
     api.patch(url, data).then((res) => res.data),
 
-  delete: <T = any>(url: string): Promise<ApiResponse<T>> =>
-    api.delete(url).then((res) => res.data),
+  delete: <T>(url: string, data?: any): Promise<ApiResponse<T>> =>
+    api.delete(url, { data }).then((res) => res.data),
 }
 
 // Auth API
 export const authApi = {
-  login: (credentials: { email: string; password: string }) =>
+  login: (credentials: { identifier: string; password: string }) =>
     apiClient.post('/auth/login', credentials),
 
   register: (data: {
-    companyName: string
-    businessType: string
-    firstName: string
-    lastName: string
     email: string
     password: string
     phone: string
-    address?: any
   }) => apiClient.post('/auth/register', data),
 
   refresh: (refreshToken: string) =>
@@ -201,6 +196,36 @@ export const transactionsApi = {
   create: (data: any) => apiClient.post('/transactions', data),
   update: (id: string, data: any) => apiClient.put(`/transactions/${id}`, data),
   delete: (id: string) => apiClient.delete(`/transactions/${id}`),
+}
+
+// Packages API
+export const packagesApi = {
+  getAll: (params?: any) => apiClient.get('/packages', params),
+  getById: (id: string) => apiClient.get(`/packages/${id}`),
+  create: (data: any) => apiClient.post('/packages', data),
+  update: (id: string, data: any) => apiClient.put(`/packages/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/packages/${id}`),
+  assignToCustomer: (packageId: string, customerId: string, data: any) =>
+    apiClient.post(`/packages/${packageId}/assign/${customerId}`, data),
+  getCustomerPackages: (customerId: string) =>
+    apiClient.get(`/customers/${customerId}/packages`),
+  trackSession: (customerPackageId: string) =>
+    apiClient.post(`/customer-packages/${customerPackageId}/track-session`),
+}
+
+// Products API
+export const productsApi = {
+  getAll: (params?: any) => apiClient.get('/products', params),
+  getById: (id: string) => apiClient.get(`/products/${id}`),
+  create: (data: any) => apiClient.post('/products', data),
+  update: (id: string, data: any) => apiClient.put(`/products/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/products/${id}`),
+  getCategories: () => apiClient.get('/product-categories'),
+  createCategory: (data: any) => apiClient.post('/product-categories', data),
+  updateCategory: (id: string, data: any) => apiClient.put(`/product-categories/${id}`, data),
+  deleteCategory: (id: string) => apiClient.delete(`/product-categories/${id}`),
+  updateStock: (id: string, quantity: number) => 
+    apiClient.post(`/products/${id}/stock`, { quantity }),
 }
 
 export default api

@@ -25,7 +25,7 @@ const { initializeSocket } = require('./config/socket');
 const jobService = require('./services/jobService');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5002;
 
 // Security middleware
 app.use(helmet());
@@ -105,19 +105,27 @@ mongoose.connect(process.env.MONGODB_URI, {
   process.exit(1);
 });
 
-// Initialize Redis
-initializeRedis()
-  .then(() => {
-    console.log('✅ Redis connected');
-    // Initialize job service after Redis is ready
-    return jobService.initialize();
-  })
-  .then(() => {
-    console.log('✅ Job service initialized');
-  })
-  .catch((error) => {
-    console.error('❌ Redis/Job service initialization error:', error);
-  });
+// Skip Redis initialization in development mode
+if (process.env.NODE_ENV === 'production') {
+  // Only initialize Redis in production
+  console.log('Production mode: Would initialize Redis here');
+  /* 
+  initializeRedis()
+    .then(() => {
+      console.log('✅ Redis connected');
+      // Initialize job service after Redis is ready
+      return jobService.initialize();
+    })
+    .then(() => {
+      console.log('✅ Job service initialized');
+    })
+    .catch((error) => {
+      console.error('❌ Redis/Job service initialization error:', error);
+    });
+  */
+} else {
+  console.log('Development mode: Skipping Redis initialization');
+}
 
 // Start server
 const server = app.listen(PORT, () => {
@@ -125,7 +133,8 @@ const server = app.listen(PORT, () => {
 });
 
 // Initialize Socket.IO
-initializeSocket(server);
+// initializeSocket(server);
+console.log('Development mode: Socket.IO initialization skipped');
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

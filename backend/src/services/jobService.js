@@ -13,6 +13,13 @@ class JobService {
   }
 
   async initialize() {
+    // Skip initialization in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Development mode: Using mock job service');
+      this.initialized = true;
+      return;
+    }
+    
     if (this.initialized) return;
 
     try {

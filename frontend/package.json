@@ -6,13 +6,18 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@fullcalendar/react": "^6.1.19",
+    "@fullcalendar/timegrid": "^6.1.19",
     "@hookform/resolvers": "^3.3.1",
     "@mui/icons-material": "^5.14.3",
     "@mui/material": "^5.14.3",
     "@mui/x-data-grid": "^6.10.1",
     "@mui/x-date-pickers": "^6.10.1",
     "@tanstack/react-query": "^4.32.6",
-    "@tanstack/react-query-devtools": "^4.32.6",
+    "@tanstack/react-query-devtools": "^4.40.1",
     "axios": "^1.5.0",
     "date-fns": "^2.30.0",
     "react": "^18.2.0",
@@ -25,6 +30,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@types/node": "^24.2.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

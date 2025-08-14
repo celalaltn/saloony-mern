@@ -39,27 +39,16 @@ export interface AuthContextType {
   company: Company | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (credentials: { email: string; password: string }) => Promise<void>
+  login: (credentials: { identifier: string; password: string }) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   hasPermission: (resource: string, action: string) => boolean
 }
 
 export interface RegisterData {
-  companyName: string
-  businessType: 'salon' | 'barbershop' | 'spa' | 'clinic'
-  firstName: string
-  lastName: string
   email: string
   password: string
   phone: string
-  address?: {
-    street?: string
-    city?: string
-    state?: string
-    postalCode?: string
-    country?: string
-  }
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -85,10 +74,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user && !!getAccessToken()
 
   // Fetch user data if token exists
-  const { isLoading } = useQuery({
+  const { isLoading: authLoading } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: authApi.getMe,
     enabled: !!getAccessToken() && !user,
+    retry: false, // Don't retry on failure during development
     onSuccess: (response) => {
       if (response.success && response.data) {
         setUser(response.data.user)
@@ -101,10 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null)
       setCompany(null)
     },
-    retry: false,
   })
 
-  const login = async (credentials: { email: string; password: string }) => {
+  const login = async (credentials: { identifier: string; password: string }) => {
     try {
       const response = await authApi.login(credentials)
       
@@ -193,10 +182,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize user data on mount if token exists
   useEffect(() => {
     const token = getAccessToken()
-    if (token && !user && !isLoading) {
+    if (token && !user && !authLoading) {
       // The query will handle fetching user data
     }
-  }, [user, isLoading])
+  }, [user, authLoading])
+
+  // Set initial loading state to false to prevent spinner from showing indefinitely
+  const [isLoading, setIsLoading] = useState(false)
 
   const value: AuthContextType = {
     user,

@@ -14,11 +14,34 @@ import RegisterPage from '@/pages/auth/RegisterPage'
 // Dashboard pages
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import AppointmentsPage from '@/pages/appointments/AppointmentsPage'
+
+// Customer pages
 import CustomersPage from '@/pages/customers/CustomersPage'
+import CreateCustomerPage from '@/pages/customers/CreateCustomerPage'
+import EditCustomerPage from '@/pages/customers/EditCustomerPage'
+
+// Services pages
 import ServicesPage from '@/pages/services/ServicesPage'
+import CreateServicePage from '@/pages/services/CreateServicePage'
+import EditServicePage from '@/pages/services/EditServicePage'
+import CategoriesPage from '@/pages/services/CategoriesPage'
+
+// Finance pages
+import FinancePage from '@/pages/finance/FinancePage'
+import CreateIncomePage from '@/pages/finance/CreateIncomePage'
+import EditIncomePage from '@/pages/finance/EditIncomePage'
+import CreateExpensePage from '@/pages/finance/CreateExpensePage'
+import EditExpensePage from '@/pages/finance/EditExpensePage'
+
+// Package pages
 import PackagesPage from '@/pages/packages/PackagesPage'
 import TransactionsPage from '@/pages/transactions/TransactionsPage'
+
+// Staff pages
 import StaffPage from '@/pages/staff/StaffPage'
+import CreateStaffPage from '@/pages/staff/CreateStaffPage'
+import EditStaffPage from '@/pages/staff/EditStaffPage'
+
 import SettingsPage from '@/pages/settings/SettingsPage'
 
 // Protected Route component
@@ -126,11 +149,61 @@ const App: React.FC = () => {
         }
       />
       <Route
+        path="/customers/create"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateCustomerPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customers/edit/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EditCustomerPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/services"
         element={
           <ProtectedRoute>
             <DashboardLayout>
               <ServicesPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/create"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateServicePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/edit/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EditServicePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/categories"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CategoriesPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -155,12 +228,84 @@ const App: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      
+      {/* Finance Routes */}
+      <Route
+        path="/finance"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <FinancePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/finance/income/create"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateIncomePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/finance/income/edit/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EditIncomePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/finance/expense/create"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateExpensePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/finance/expense/edit/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EditExpensePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/staff"
         element={
           <ProtectedRoute>
             <DashboardLayout>
               <StaffPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/create"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateStaffPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/edit/:id"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EditStaffPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -177,10 +322,10 @@ const App: React.FC = () => {
       />
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       
       {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }

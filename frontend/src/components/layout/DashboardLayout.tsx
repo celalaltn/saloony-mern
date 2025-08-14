@@ -76,10 +76,10 @@ const navigationItems: NavigationItem[] = [
     permission: { resource: 'packages', action: 'view' },
   },
   {
-    text: 'Gelir/Gider',
+    text: 'Finans',
     icon: <AccountBalance />,
-    path: '/transactions',
-    permission: { resource: 'transactions', action: 'view' },
+    path: '/finance',
+    permission: { resource: 'finance', action: 'view' },
   },
   {
     text: 'Personel',
