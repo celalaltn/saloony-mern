@@ -18,7 +18,7 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Tooltip,
+  // Tooltip, - kullanılmıyor
   Card,
   CardContent,
   Grid,
@@ -40,13 +40,13 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   Event as EventIcon,
-  Cake as CakeIcon,
-  Person as PersonIcon,
+  // Cake as CakeIcon, - kullanılmıyor
+  // Person as PersonIcon, - kullanılmıyor
   Notifications as NotificationsIcon,
   NotificationsOff as NotificationsOffIcon,
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { customersApi } from '@/lib/api'
+import { customersApi } from '@/lib/api/customersApi'
 import { format, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
@@ -68,7 +68,7 @@ const CustomersPage: React.FC = () => {
       page: page + 1, 
       limit: rowsPerPage, 
       search: searchQuery,
-      filter: selectedTab === 1 ? 'withAppointments' : selectedTab === 2 ? 'recentlyAdded' : undefined
+      isActive: true // Sadece aktif müşterileri getir
     }),
   })
 
@@ -86,7 +86,7 @@ const CustomersPage: React.FC = () => {
   })
 
   // Handle page change
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage)
   }
 
@@ -103,7 +103,7 @@ const CustomersPage: React.FC = () => {
   }
 
   // Handle tab change
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue)
     setPage(0)
   }
@@ -244,8 +244,8 @@ const CustomersPage: React.FC = () => {
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : customersData?.data?.customers?.length > 0 ? (
-                customersData.data.customers.map((customer: any) => (
+              ) : customersData?.customers?.length > 0 ? (
+                customersData.customers.map((customer: any) => (
                   <TableRow 
                     key={customer.id}
                     hover
@@ -290,9 +290,10 @@ const CustomersPage: React.FC = () => {
                       </Box>
                     </TableCell>
                     <TableCell>{getGenderText(customer.gender)}</TableCell>
-                    <TableCell>{formatDate(customer.birthDate)}</TableCell>
+                    <TableCell>{formatDate(customer.dateOfBirth)}</TableCell>
                     <TableCell>
-                      {getNotificationChip(customer.allowSMS, customer.allowEmail)}
+                      {getNotificationChip(customer.communicationPreference === 'sms' || customer.communicationPreference === 'both', 
+                                         customer.communicationPreference === 'email' || customer.communicationPreference === 'both')}
                     </TableCell>
                     <TableCell align="right">
                       <IconButton
@@ -321,7 +322,7 @@ const CustomersPage: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={customersData?.data?.pagination?.total || 0}
+          count={customersData?.total || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

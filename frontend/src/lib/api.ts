@@ -30,13 +30,14 @@ export const clearTokens = () => {
   localStorage.removeItem('refreshToken')
 }
 
-export const getAccessToken = () => accessToken
+export const getAccessToken = () => localStorage.getItem('accessToken')
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`
+    const token = getAccessToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
@@ -50,35 +51,44 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as any
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    
+    // Only attempt to refresh token if we get a 401 error, the request hasn't been retried yet,
+    // and we have a refresh token available
+    if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
       originalRequest._retry = true
-
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          })
-
+      
+      try {
+        // Use the api instance directly to avoid potential infinite loops
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        })
+        
+        // Check if the response has the expected structure
+        if (response.data?.success && response.data?.data?.tokens) {
           const { tokens } = response.data.data
           setTokens(tokens)
-
-          // Retry original request with new token
+          
+          // Update the Authorization header with the new token
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`
+          
+          // Retry the original request with the new token
           return api(originalRequest)
-        } catch (refreshError) {
-          // Refresh failed, redirect to login
-          clearTokens()
-          window.location.href = '/login'
-          return Promise.reject(refreshError)
+        } else {
+          throw new Error('Invalid token refresh response')
         }
-      } else {
-        // No refresh token, redirect to login
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError)
+        // Clear tokens and redirect to login
         clearTokens()
         window.location.href = '/login'
+        return Promise.reject(error) // Return the original error
       }
+    } else if (error.response?.status === 401) {
+      // If we get a 401 but can't refresh (no token or already tried), clear and redirect
+      clearTokens()
+      window.location.href = '/login'
     }
-
+    
     return Promise.reject(error)
   }
 )

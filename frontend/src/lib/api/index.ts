@@ -1,7 +1,8 @@
 // Export all API modules
 export * from './servicesApi'
+export * from './customersApi'
+export * from './staffApi'
+export * from './financeApi'
 
-// Add other API exports here as they are created
-// export * from './customersApi'
-// export * from './appointmentsApi'
-// etc.
+// Re-export config
+export * from './config'

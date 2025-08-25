@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { api } from '../api'
 import { API_URL } from '../config'
 
 // Customer Types
@@ -40,12 +40,18 @@ export const customersApi = {
     search?: string
     isActive?: boolean
   }) => {
-    const response = await axios.get(`${API_URL}/api/v1/customers`, { params })
+    // Convert boolean isActive to string if present
+    const queryParams = params ? { 
+      ...params,
+      isActive: params.isActive !== undefined ? String(params.isActive) : undefined 
+    } : undefined;
+    
+    const response = await api.get('/customers', { params: queryParams })
     return response.data
   },
 
   getById: async (id: string) => {
-    const response = await axios.get(`${API_URL}/api/v1/customers/${id}`)
+    const response = await api.get(`${API_URL}/api/v1/customers/${id}`)
     return response.data
   },
 
@@ -60,13 +66,13 @@ export const customersApi = {
     notes?: string
     isActive?: boolean
   }) => {
-    const response = await axios.post(`${API_URL}/api/v1/customers`, data)
+    const response = await api.post(`${API_URL}/api/v1/customers`, data)
     return response.data
   },
 
   update: async (
     id: string,
-    data: {
+    customerData: {
       firstName?: string
       lastName?: string
       email?: string
@@ -78,17 +84,17 @@ export const customersApi = {
       isActive?: boolean
     }
   ) => {
-    const response = await axios.put(`${API_URL}/api/v1/customers/${id}`, data)
+    const response = await api.put(`${API_URL}/api/v1/customers/${id}`, customerData)
     return response.data
   },
 
   delete: async (id: string) => {
-    const response = await axios.delete(`${API_URL}/api/v1/customers/${id}`)
+    const response = await api.delete(`${API_URL}/api/v1/customers/${id}`)
     return response.data
   },
 
   toggleActive: async (id: string, isActive: boolean) => {
-    const response = await axios.patch(`${API_URL}/api/v1/customers/${id}/toggle-active`, {
+    const response = await api.patch(`${API_URL}/api/v1/customers/${id}/toggle-active`, {
       isActive,
     })
     return response.data
@@ -96,7 +102,7 @@ export const customersApi = {
 
   // Customer statistics
   getStats: async () => {
-    const response = await axios.get(`${API_URL}/api/v1/customers/stats`)
+    const response = await api.get(`${API_URL}/api/v1/customers/stats`)
     return response.data
   },
 }

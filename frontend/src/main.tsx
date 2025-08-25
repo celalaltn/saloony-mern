@@ -10,7 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { tr } from 'date-fns/locale'
 
 import App from './App'
-import { theme } from './theme'
+import { theme } from './theme/index'
 import { AuthProvider } from './contexts/AuthContext'
 import { SocketProvider } from './contexts/SocketContext'
 import './index.css'

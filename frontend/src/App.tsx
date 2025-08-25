@@ -48,6 +48,8 @@ import SettingsPage from '@/pages/settings/SettingsPage'
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth()
 
+  console.log('ProtectedRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated)
+
   if (isLoading) {
     return (
       <Box
@@ -55,8 +57,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
+        sx={{ backgroundColor: '#f5f5f5' }}
       >
-        <CircularProgress />
+        <Box textAlign="center">
+          <CircularProgress />
+          <Box mt={2}>Yükleniyor...</Box>
+        </Box>
       </Box>
     )
   }
@@ -72,6 +78,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth()
 
+  console.log('PublicRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated)
+
   if (isLoading) {
     return (
       <Box
@@ -79,8 +87,12 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
+        sx={{ backgroundColor: '#f5f5f5' }}
       >
-        <CircularProgress />
+        <Box textAlign="center">
+          <CircularProgress />
+          <Box mt={2}>Yükleniyor...</Box>
+        </Box>
       </Box>
     )
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -28,7 +28,6 @@ import {
   Event as EventIcon,
   Search as SearchIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   PersonOff as PersonOffIcon,
@@ -37,6 +36,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { appointmentsApi } from '@/lib/api'
 import { format, isToday, isTomorrow, addDays, isAfter, isBefore, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import AppointmentFormModal from '@/components/appointments/AppointmentFormModal'
 
 const AppointmentsPage: React.FC = () => {
   const navigate = useNavigate()
@@ -45,6 +45,7 @@ const AppointmentsPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Get appointments data
   const { data: appointmentsData, isLoading } = useQuery({
@@ -64,7 +65,7 @@ const AppointmentsPage: React.FC = () => {
   })
 
   // Handle page change
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage)
   }
 
@@ -141,7 +142,7 @@ const AppointmentsPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             color="primary"
-            onClick={() => navigate('/appointments/create')}
+            onClick={() => setIsModalOpen(true)}
           >
             Yeni Randevu
           </Button>
@@ -245,7 +246,7 @@ const AppointmentsPage: React.FC = () => {
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : appointmentsData?.data?.appointments?.length > 0 ? (
+              ) : appointmentsData && appointmentsData.data && appointmentsData.data.appointments && appointmentsData.data.appointments.length > 0 ? (
                 appointmentsData.data.appointments.map((appointment: any) => (
                   <TableRow key={appointment.id}>
                     <TableCell>{formatDate(appointment.startTime)}</TableCell>
@@ -339,6 +340,12 @@ const AppointmentsPage: React.FC = () => {
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
         />
       </Paper>
+      
+      {/* Appointment Form Modal */}
+      <AppointmentFormModal 
+        open={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </Box>
   )
 }

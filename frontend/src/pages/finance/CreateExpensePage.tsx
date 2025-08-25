@@ -50,7 +50,7 @@ const CreateExpensePage: React.FC = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       amount: 0,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
       categoryId: '',
       description: '',
       paymentMethod: '',
@@ -69,7 +69,7 @@ const CreateExpensePage: React.FC = () => {
 
   // Create expense mutation
   const createExpenseMutation = useMutation({
-    mutationFn: (data: any) => financeApi.createExpense(data),
+    mutationFn: (data: FormData) => financeApi.createExpense(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['financeSummary'] })

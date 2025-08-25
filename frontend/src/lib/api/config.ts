@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // API temel URL'si
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api/v1'
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
 
 // Token'ı localStorage'dan al
 const getToken = () => localStorage.getItem('accessToken')

@@ -68,30 +68,27 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [company, setCompany] = useState<Company | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
   const queryClient = useQueryClient()
 
-  // Check if user is authenticated
+  // Check if user is authenticated - both user data and valid token must exist
   const isAuthenticated = !!user && !!getAccessToken()
 
   // Fetch user data if token exists
   const { isLoading: authLoading } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: authApi.getMe,
-    enabled: !!getAccessToken() && !user,
-    retry: false, // Don't retry on failure during development
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        setUser(response.data.user)
-        setCompany(response.data.company)
-      }
-    },
-    onError: () => {
-      // Token is invalid, clear it
-      clearTokens()
-      setUser(null)
-      setCompany(null)
-    },
+    enabled: !!getAccessToken(),
+    retry: false,
   })
+
+  // Simplified initialization logic
+  useEffect(() => {
+    console.log('AuthContext initialization - authLoading:', authLoading, 'hasToken:', !!getAccessToken(), 'isInitializing:', isInitializing)
+    
+    // Always stop initializing after first render
+    setIsInitializing(false)
+  }, [])
 
   const login = async (credentials: { identifier: string; password: string }) => {
     try {
@@ -179,16 +176,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return resourcePermissions[action as keyof typeof resourcePermissions] || false
   }
 
-  // Initialize user data on mount if token exists
-  useEffect(() => {
-    const token = getAccessToken()
-    if (token && !user && !authLoading) {
-      // The query will handle fetching user data
-    }
-  }, [user, authLoading])
 
-  // Set initial loading state to false to prevent spinner from showing indefinitely
-  const [isLoading, setIsLoading] = useState(false)
+  // On initial mount, if there's no token, we can stop initializing
+  useEffect(() => {
+    if (!getAccessToken()) {
+      setIsInitializing(false)
+    }
+  }, [])
+
+  // Force stop loading after 3 seconds to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isInitializing) {
+        console.warn('Auth initialization timeout - forcing completion')
+        setIsInitializing(false)
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [isInitializing])
+
+  const isLoading = isInitializing // Remove authLoading dependency
 
   const value: AuthContextType = {
     user,

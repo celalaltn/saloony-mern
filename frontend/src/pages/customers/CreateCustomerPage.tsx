@@ -29,16 +29,41 @@ const schema = yup.object({
   lastName: yup.string().required('Soyisim zorunludur'),
   email: yup.string().email('Geçerli bir e-posta adresi giriniz'),
   phone: yup.string().required('Telefon numarası zorunludur'),
-  gender: yup.string().oneOf(['male', 'female', 'other'], 'Geçerli bir cinsiyet seçiniz'),
+  gender: yup.string().oneOf(['male', 'female', 'other', 'prefer_not_to_say'], 'Geçerli bir cinsiyet seçiniz'),
   birthDate: yup.date().nullable(),
-  address: yup.string(),
+  // Adres alanlarını ayrı ayrı tanımlıyoruz
+  street: yup.string(),
+  city: yup.string(),
+  state: yup.string(),
+  postalCode: yup.string(),
+  country: yup.string(),
   notes: yup.string(),
   allowSMS: yup.boolean(),
   allowEmail: yup.boolean(),
+  // address alanını kaldırıyoruz, artık ayrı alanlar kullanıyoruz
 }).required()
 
 // Form data type
 type FormData = yup.InferType<typeof schema>
+
+// Backend'e gönderilecek veri tipi
+interface CustomerPayload {
+  firstName: string
+  lastName: string
+  email?: string
+  phone: string
+  dateOfBirth?: string // ISO8601 format
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say'
+  address?: {
+    street?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+  }
+  notes?: string
+  communicationPreference?: 'email' | 'sms' | 'both' | 'none'
+}
 
 const CreateCustomerPage: React.FC = () => {
   const navigate = useNavigate()
@@ -59,7 +84,12 @@ const CreateCustomerPage: React.FC = () => {
       phone: '',
       gender: '',
       birthDate: null,
-      address: '',
+      // Adres alanlarını ayrı ayrı tanımlıyoruz
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
       notes: '',
       allowSMS: true,
       allowEmail: true,
@@ -68,7 +98,34 @@ const CreateCustomerPage: React.FC = () => {
 
   // Create customer mutation
   const createCustomerMutation = useMutation({
-    mutationFn: (data: any) => customersApi.create(data),
+    mutationFn: (data: FormData) => {
+      // Form verilerini backend'in beklediği formata dönüştür
+      const payload: CustomerPayload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        email: data.email,
+        // birthDate -> dateOfBirth olarak dönüştür ve ISO string formatına çevir
+        dateOfBirth: data.birthDate ? new Date(data.birthDate).toISOString() : undefined,
+        gender: data.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
+        // Adres alanlarını nesne yapısına dönüştür
+        address: {
+          street: data.street || '',
+          city: data.city || '',
+          state: data.state || '',
+          postalCode: data.postalCode || '',
+          country: data.country || ''
+        },
+        notes: data.notes,
+        // İletişim tercihlerini ekle
+        communicationPreference: data.allowEmail && data.allowSMS ? 'both' : 
+                                data.allowEmail ? 'email' : 
+                                data.allowSMS ? 'sms' : 'none'
+      }
+      
+      // API'ye dönüştürülmüş veriyi gönder
+      return customersApi.create(payload)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
       navigate('/customers')
@@ -80,7 +137,13 @@ const CreateCustomerPage: React.FC = () => {
 
   // Form submission handler
   const onSubmit = (data: FormData) => {
-    createCustomerMutation.mutate(data)
+    // address alanını temizle, bu alanı kullanmıyoruz
+    const cleanedData = { ...data };
+    // @ts-ignore - address alanını temizle
+    delete cleanedData.address;
+    
+    console.log('Temizlenmiş form verileri:', cleanedData) // Hata ayıklama için form verilerini görüntüle
+    createCustomerMutation.mutate(cleanedData)
   }
 
   const isLoading = createCustomerMutation.isPending
@@ -180,6 +243,7 @@ const CreateCustomerPage: React.FC = () => {
                       <MenuItem value="male">Erkek</MenuItem>
                       <MenuItem value="female">Kadın</MenuItem>
                       <MenuItem value="other">Diğer</MenuItem>
+                      <MenuItem value="prefer_not_to_say">Belirtmek İstemiyorum</MenuItem>
                     </Select>
                     {errors.gender && (
                       <FormHelperText>{errors.gender.message}</FormHelperText>
@@ -208,19 +272,89 @@ const CreateCustomerPage: React.FC = () => {
               />
             </Grid>
             
+            {/* Adres alanlarını ayrı ayrı inputlar olarak ekliyoruz */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom>
+                Adres Bilgileri
+              </Typography>
+            </Grid>
+            
             <Grid item xs={12}>
               <Controller
-                name="address"
+                name="street"
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Adres"
+                    label="Sokak/Cadde"
                     fullWidth
-                    multiline
-                    rows={2}
-                    error={!!errors.address}
-                    helperText={errors.address?.message}
+                    error={!!errors.street}
+                    helperText={errors.street?.message}
+                  />
+                )}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Şehir"
+                    fullWidth
+                    error={!!errors.city}
+                    helperText={errors.city?.message}
+                  />
+                )}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Controller
+                name="state"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="İlçe/Bölge"
+                    fullWidth
+                    error={!!errors.state}
+                    helperText={errors.state?.message}
+                  />
+                )}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Controller
+                name="postalCode"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Posta Kodu"
+                    fullWidth
+                    error={!!errors.postalCode}
+                    helperText={errors.postalCode?.message}
+                  />
+                )}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Ülke"
+                    fullWidth
+                    error={!!errors.country}
+                    helperText={errors.country?.message}
+                    defaultValue="Türkiye"
                   />
                 )}
               />
